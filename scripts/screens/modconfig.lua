@@ -50,6 +50,10 @@ end
 function ModConfig:Open()
   if self.open then return false end
 
+  if #TheFrontEnd.screenstack >= 2 then
+    return false
+  end
+
   Screen._ctor(self, "ModConfig")
   SetPause(true, "inv")
   self.open = true

@@ -1,13 +1,13 @@
 name = "Minimap HUD MZ"
 description = "Adds a minimap to the HUD with More customiZable"
 author = "pigshaam" -- Original: "squeek"
-version = "1.1.2"
+version = "1.1.2b"
 forumthread = "" -- Original: "/files/file/352-minimap-hud/"
 icon_atlas = "modicon.xml"
 icon = "modicon.tex"
 
 -- this setting is dumb; this mod is likely compatible with all future versions
-api_version = 6
+api_version = 10
 
 client_only_mod = true
 dst_compatible = true

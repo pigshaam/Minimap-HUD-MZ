@@ -26,9 +26,10 @@ local ROWS_PER_COL = 7
 
 local options = {}
 
-local ModConfig = Class(Screen, function(self)
+local ModConfig = Class(Screen, function(self, IsDST)
   Screen._ctor(self, "ModConfig")
 
+  self.IsDST = IsDST
   self.minimapwidgetmz = nil
   self.modmain_updatestate_callback = nil
   self.quicksaving = false

@@ -1,9 +1,21 @@
+local require = GLOBAL.require
+require "strings"
+
+local IsDST = GLOBAL.STRINGS.UI.MODSSCREEN.COMPATIBILITY_DST ~= nil -- Different from the original meaning.
+
+local function GetPlayer()
+  local player
+  if IsDST then
+    player = GLOBAL.ThePlayer
+  else
+    player = GLOBAL.GetPlayer()
+  end
+  return player
+end
 
 ----------------------------------------
 -- Do the stuff
 ----------------------------------------
-
-local require = GLOBAL.require
 
 local function AddMiniMapMz_main( inst )
 
@@ -17,10 +29,10 @@ local function AddMiniMapMz_main( inst )
 
     local controls = inst.HUD.controls
 
-    local modconfig = ModConfig()
+    local modconfig = ModConfig(IsDST)
     modconfig:Init()
 
-    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( inst, modconfig ) )
+    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( IsDST, inst, modconfig ) )
     modconfig.minimapwidgetmz = controls.minimapwidgetmz
 
     local screensize = {TheSim:GetScreenSize()}
@@ -37,7 +49,7 @@ local function AddMiniMapMz_main( inst )
       end
     end
 
-  -- show and hide the minimap whenever the map gets toggled
+    -- show and hide the minimap whenever the map gets toggled
     local ToggleMap_base = controls.ToggleMap
     controls.ToggleMap = function( self )
       local wasvisible = controls.minimapwidgetmz:IsVisible()
@@ -257,7 +269,11 @@ local function AddMiniMapMz_main( inst )
 
 end
 
-AddSimPostInit( AddMiniMapMz_main )
+if IsDST then
+  AddPlayerPostInit( AddMiniMapMz_main )
+else
+  AddSimPostInit( AddMiniMapMz_main )
+end
 
 -- special case: ToggleMap gets bypassed when the map gets hidden while on the map screen
 local function AddMiniMapMz_MapScreen( inst )
@@ -266,7 +282,7 @@ local function AddMiniMapMz_MapScreen( inst )
   MapScreen.OnControl = function(self, control, down)
     ret = mapscreen_oncontrol_base(self, control, down)
     if ret and not down and (control == GLOBAL.CONTROL_MAP or control == GLOBAL.CONTROL_CANCEL) then
-      local controls = GLOBAL.GetPlayer().HUD.controls
+      local controls = GetPlayer().HUD.controls
       if controls.minimapwidgetmz then
         controls.minimapwidgetmz:Show()
       end

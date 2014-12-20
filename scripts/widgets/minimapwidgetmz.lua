@@ -2,12 +2,20 @@ local Widget = require "widgets/widget"
 local Image = require "widgets/image"
 local ImageButton = require "widgets/imagebutton"
 
-local MiniMapWidgetMz = Class(Widget, function(self, owner, modconfig)
+local world
+
+local MiniMapWidgetMz = Class(Widget, function(self, IsDST, owner, modconfig)
   Widget._ctor(self, "MiniMapWidgetMz")
+  self.IsDST = IsDST
   self.owner = owner -- == GetPlayer()
   self.adjustvalue = 0.225 -- The mysterious value
   self.modconfig = modconfig
-  self.minimap = GetWorld().minimap.MiniMap
+  if IsDST then
+    world = TheWorld
+  else
+    world = GetWorld()
+  end
+  self.minimap = world.minimap.MiniMap
   self.bg = self:AddChild(Image("images/hud.xml", "map.tex"))
   self.map = self:AddChild(Image())
   self:UpdateTexture()

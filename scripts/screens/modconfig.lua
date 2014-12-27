@@ -640,7 +640,7 @@ function ModConfig:LoadModConfigurationOptions(configname, modinfo)
           else
             modinfo.configuration_options = savedata
           end
-          print ("loaded "..filename)
+          --print ("loaded "..filename)
         else
           print ("Could not load "..filename)
         end

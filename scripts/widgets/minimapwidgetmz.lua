@@ -39,6 +39,8 @@ local MiniMapWidgetMz = Class(Widget, function(self, IsDST, owner, modconfig)
   self.mapcenter_gap = Point(0, 0)
   self.dirty = false
   self.hudsize = PlayerProfile:GetHUDSize()
+  self.uvscalechangelevel1 = 2.0
+  self.uvscalechangelevel2 = 0.1
 
   self:UpdateState()
   self:PositionMiniMap()
@@ -219,11 +221,14 @@ function MiniMapWidgetMz:UpdateState()
   self.map:SetClickable(self.modconfig.map_clickable)
   self.bg:SetTint(1,1,1,self.modconfig.bg_trans)
   if not self.modconfig:IsQuickSaving() then
-    if self.modconfig.default_zoom < 3 then
+--    if self.modconfig.default_zoom < 3 then
+    local zoomdiff = (1.9-1.0)/self.uvscalechangelevel2
+    if self.modconfig.default_zoom < zoomdiff then
       self.minimapzoom = 0
-      self.uvscale = 1*((1-0.5^(4-self.modconfig.default_zoom))/(1-0.5)) -- Geometric progression : 1, 1.5, 1.75, 1.875, ...
+--      self.uvscale = 1*((1-(1/self.uvscalechangelevel1)^(4-self.modconfig.default_zoom))/(1-1/self.uvscalechangelevel1)) -- Geometric progression : 1, 1.5, 1.75, 1.875, ...
+      self.uvscale = 1.9 - self.uvscalechangelevel2*self.modconfig.default_zoom
     else
-      self.minimapzoom = self.modconfig.default_zoom - 3
+      self.minimapzoom = self.modconfig.default_zoom - zoomdiff
       self.uvscale = 1
     end
     self.mapcenter_gap = Point(0, 0)
@@ -307,8 +312,8 @@ function MiniMapWidgetMz:ResizeMapView(mappos_x, mappos_y)
 
   if self.lastpos_bg then
     local scrn_w, scrn_h = TheSim:GetScreenSize()
-    local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w  /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
-    local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h  /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
+    local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w  /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
+    local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h  /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
     local location_gap_x = (dx-self.lastpos_bg.x)*mapscale_gap_w
     local location_gap_y = (dy-self.lastpos_bg.y)*mapscale_gap_h
     self.minimap:Offset(location_gap_x, location_gap_y)
@@ -443,20 +448,26 @@ function MiniMapWidgetMz:OnZoomIn(  )
       local newmappos_x, newmappos_y = self:ResizeMapView()
       self:SetPosition(newmappos_x, newmappos_y)
       self:SetOpen(self.open)
-      self:SaveConfigValueMapSize(self.modconfig.mapscale)
+      self:SaveConfigValueMapSize(self.mapsize.w)
       self:SaveConfigValueMapPos(newmappos_x, newmappos_y)
       self:MakeDirty()
+      self:ShowHideButtons()
     else
       local old_uvscale = self.uvscale
       if self.minimapzoom == 0 then
-        self.uvscale = math.min(1.875, (2.0 + self.uvscale)/2)
+--        self.uvscale = math.min(1.875, (self.uvscalechangelevel1 + self.uvscale)/self.uvscalechangelevel1)
+        self.uvscale = math.min(1.9, self.uvscale + self.uvscalechangelevel2)
       end
       self.map:SetUVScale(self.uvscale, self.uvscale)
       self.minimap:Zoom( -1 )
       self.minimapzoom = math.max(0,self.minimapzoom-1)
       if old_uvscale ~= self.uvscale then
-        self.mapcenter_gap.x = self.mapcenter_gap.x / 2
-        self.mapcenter_gap.y = self.mapcenter_gap.y / 2
+--        self.mapcenter_gap.x = self.mapcenter_gap.x / self.uvscalechangelevel1
+--        self.mapcenter_gap.y = self.mapcenter_gap.y / self.uvscalechangelevel1
+        local ratio = 2^(math.log((-((self.uvscale-self.uvscalechangelevel2)*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1)
+                      / 2^(math.log((-((self.uvscale)*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1)
+        self.mapcenter_gap.x = self.mapcenter_gap.x * ratio
+        self.mapcenter_gap.y = self.mapcenter_gap.y * ratio
       end
       self:ResetOffset()
     end
@@ -480,16 +491,19 @@ function MiniMapWidgetMz:OnZoomOut( )
       local newmappos_x, newmappos_y = self:ResizeMapView()
       self:SetPosition(newmappos_x, newmappos_y)
       self:SetOpen(self.open)
-      self:SaveConfigValueMapSize(self.modconfig.mapscale)
+      self:SaveConfigValueMapSize(self.mapsize.w)
       self:SaveConfigValueMapPos(newmappos_x, newmappos_y)
       self:MakeDirty()
+      self:ShowHideButtons()
     else
       local old_uvscale = self.uvscale
       local old_minimapzoom = self.minimapzoom
       local dozoom = true
       if self.minimapzoom == 0 then
-        if self.uvscale - 1 > 0.05 then
-          self.uvscale = math.max(1, 2*self.uvscale - 2)
+--        if self.uvscale - 1 > 0.05 then
+        if self.uvscale - 1 > self.uvscalechangelevel2 then
+--          self.uvscale = math.max(1, self.uvscalechangelevel1*self.uvscale - self.uvscalechangelevel1)
+          self.uvscale = math.max(1, self.uvscale - self.uvscalechangelevel2)
           dozoom = false
         else
           self.uvscale = 1
@@ -501,8 +515,13 @@ function MiniMapWidgetMz:OnZoomOut( )
         self.minimapzoom = self.minimapzoom+1
       end
       if old_uvscale ~= self.uvscale then
-        self.mapcenter_gap.x = self.mapcenter_gap.x * 2
-        self.mapcenter_gap.y = self.mapcenter_gap.y * 2
+--        self.mapcenter_gap.x = self.mapcenter_gap.x * self.uvscalechangelevel1
+--        self.mapcenter_gap.y = self.mapcenter_gap.y * self.uvscalechangelevel1
+        local ratio = 2^(math.log((-((self.uvscale+self.uvscalechangelevel2)*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1)
+                      / 2^(math.log((-((self.uvscale)*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1)
+                      
+        self.mapcenter_gap.x = self.mapcenter_gap.x * ratio
+        self.mapcenter_gap.y = self.mapcenter_gap.y * ratio
       end
       self:ResetOffset()
     end
@@ -531,8 +550,8 @@ function MiniMapWidgetMz:OnUpdate(dt)
     if self.lastpos and (self.lastpos.x ~= pos.x or self.lastpos.y ~= pos.y) then
       local hudscale = self.owner.HUD.controls.top_root:GetScale()
       local scrn_w, scrn_h = TheSim:GetScreenSize()
-      local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
-      local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
+      local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
+      local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
       local scrn_dx = (pos.x - self.lastpos.x) / hudscale.x
       local scrn_dy = (pos.y - self.lastpos.y) / hudscale.y
       local location_gap_dx = mapscale_gap_w * scrn_dx
@@ -571,8 +590,8 @@ function MiniMapWidgetMz:OnUpdate(dt)
 
       new_x, new_y = self:ResizeMapView(new_x, new_y)
       local scrn_w, scrn_h = TheSim:GetScreenSize()
-      local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w  /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
-      local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h  /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
+      local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w  /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
+      local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h  /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
 
       local mapcenter_gap_after_x = self.mapcenter_gap.x
       local mapcenter_gap_after_y = self.mapcenter_gap.y
@@ -645,8 +664,8 @@ end
 function MiniMapWidgetMz:ResetOffset()
   self.minimap:ResetOffset()
   local scrn_w, scrn_h = TheSim:GetScreenSize()
-  local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w  /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
-  local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h  /(2^(math.log((-(self.uvscale*(1-0.5))/1+1))/math.log(0.5)-1))
+  local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w  /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
+  local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h  /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
   local location_gap_x = self.mappos_gap.x*mapscale_gap_w + self.mapcenter_gap.x
   local location_gap_y = self.mappos_gap.y*mapscale_gap_h + self.mapcenter_gap.y
   self.minimap:Offset(location_gap_x, location_gap_y)

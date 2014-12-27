@@ -1,7 +1,7 @@
 name = "Minimap HUD MZ"
 description = "Adds a minimap to the HUD with More customiZable"
 author = "pigshaam" -- Original: "squeek"
-version = "1.1.2"
+version = "1.1.3"
 forumthread = "" -- Original: "/files/file/352-minimap-hud/"
 icon_atlas = "modicon.xml"
 icon = "modicon.tex"
@@ -128,9 +128,9 @@ configuration_options =
         {
             {description = "0 (Most ZoomIn)",   data = 0},
             {description = "1",                 data = 1},
-            {description = "2 (default)",       data = 2},
+            {description = "2",                 data = 2},
             {description = "3",                 data = 3},
-            {description = "4",                 data = 4},
+            {description = "4 (default)",       data = 4},
             {description = "5",                 data = 5},
             {description = "6",                 data = 6},
             {description = "7",                 data = 7},
@@ -148,7 +148,7 @@ configuration_options =
             {description = "19",                data = 19},
             {description = "20 (Most ZoomOut)", data = 20},
         },
-        default = 2,
+        default = 4,
     },
     {
         name = "Close when open chest",

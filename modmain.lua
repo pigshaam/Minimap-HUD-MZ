@@ -1,7 +1,6 @@
 local require = GLOBAL.require
-require "strings"
-
-local IsDST = GLOBAL.STRINGS.UI.MODSSCREEN.COMPATIBILITY_DST ~= nil -- Different from the original meaning.
+require "mods"
+local IsDST = GLOBAL.MOD_API_VERSION == 10
 
 local function GetPlayer()
   local player
@@ -13,6 +12,16 @@ local function GetPlayer()
   return player
 end
 
+local function GetWorld()
+  local world
+  if IsDST then
+    world = GLOBAL.TheWorld
+  else
+    world = GLOBAL.GetWorld()
+  end
+  return world
+end
+
 ----------------------------------------
 -- Do the stuff
 ----------------------------------------
@@ -21,7 +30,7 @@ local function AddMiniMapMz_main( inst )
 
   -- for some reason, without this the game would crash without an error when calling controls.top_root:AddChild
   -- too lazy to track down the cause, so just using this workaround
-  inst:DoTaskInTime( 0, function() 
+  inst:DoTaskInTime( 0, function(inst) 
 
     -- add the minimap widget and set its position
     local MiniMapWidgetMz = require "widgets/minimapwidgetmz"
@@ -32,7 +41,7 @@ local function AddMiniMapMz_main( inst )
     local modconfig = ModConfig(IsDST)
     modconfig:Init()
 
-    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( IsDST, inst, modconfig ) )
+    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( IsDST, inst, GetPlayer, GetWorld, modconfig ) )
     modconfig.minimapwidgetmz = controls.minimapwidgetmz
 
     local screensize = {TheSim:GetScreenSize()}
@@ -269,11 +278,7 @@ local function AddMiniMapMz_main( inst )
 
 end
 
-if IsDST then
-  AddPlayerPostInit( AddMiniMapMz_main )
-else
-  AddSimPostInit( AddMiniMapMz_main )
-end
+AddPlayerPostInit( AddMiniMapMz_main )
 
 -- special case: ToggleMap gets bypassed when the map gets hidden while on the map screen
 local function AddMiniMapMz_MapScreen( inst )

@@ -4,18 +4,15 @@ local ImageButton = require "widgets/imagebutton"
 
 local world
 
-local MiniMapWidgetMz = Class(Widget, function(self, IsDST, owner, modconfig)
+local MiniMapWidgetMz = Class(Widget, function(self, IsDST, owner, playerfn, worldfn, modconfig)
   Widget._ctor(self, "MiniMapWidgetMz")
   self.IsDST = IsDST
-  self.owner = owner -- == GetPlayer()
+  self.owner = owner
+  self.playerfn = playerfn
+  self.worldfn = worldfn
   self.adjustvalue = 0.225 -- The mysterious value
   self.modconfig = modconfig
-  if IsDST then
-    world = TheWorld
-  else
-    world = GetWorld()
-  end
-  self.minimap = world.minimap.MiniMap
+  self.minimap = worldfn().minimap.MiniMap
   self.bg = self:AddChild(Image("images/hud.xml", "map.tex"))
   self.map = self:AddChild(Image())
   self:UpdateTexture()
@@ -101,7 +98,7 @@ function MiniMapWidgetMz:PositionMiniMap()
     self.margin_dir_vert = 1
   end
 
-  local hudscale = self.owner.HUD.controls.top_root:GetScale()
+  local hudscale = self.playerfn().HUD.controls.top_root:GetScale()
   local screenw_full, screenh_full = TheSim:GetScreenSize()
   local screenw = screenw_full/hudscale.x
   local screenh = screenh_full/hudscale.y
@@ -244,7 +241,7 @@ function MiniMapWidgetMz:UpdateState()
 end
 
 function MiniMapWidgetMz:ResizeMapView(mappos_x, mappos_y)
-  local hudscale = self.owner.HUD.controls.top_root:GetScale()
+  local hudscale = self.playerfn().HUD.controls.top_root:GetScale()
   if mappos_x == nil or mappos_y == nil then
     local mappos_now = self:GetPosition()
     mappos_x = mappos_now.x
@@ -548,7 +545,7 @@ function MiniMapWidgetMz:OnUpdate(dt)
     local pos = TheInput:GetScreenPosition()
 
     if self.lastpos and (self.lastpos.x ~= pos.x or self.lastpos.y ~= pos.y) then
-      local hudscale = self.owner.HUD.controls.top_root:GetScale()
+      local hudscale = self.playerfn().HUD.controls.top_root:GetScale()
       local scrn_w, scrn_h = TheSim:GetScreenSize()
       local mapscale_gap_w = self.adjustvalue*scrn_w/self.mapsize.w /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
       local mapscale_gap_h = self.adjustvalue*scrn_h/self.mapsize.h /(2^(math.log((-(self.uvscale*(1-1/self.uvscalechangelevel1))/1+1))/math.log(1/self.uvscalechangelevel1)-1))
@@ -569,7 +566,7 @@ function MiniMapWidgetMz:OnUpdate(dt)
 
     if self.lastpos and (self.lastpos.x ~= pos.x or self.lastpos.y ~= pos.y) then
       local mappos = self:GetPosition()
-      local hudscale = self.owner.HUD.controls.top_root:GetScale()
+      local hudscale = self.playerfn().HUD.controls.top_root:GetScale()
       local dx = (pos.x - self.lastpos.x) / hudscale.x
       local dy = (pos.y - self.lastpos.y) / hudscale.y
       local new_x
@@ -636,7 +633,7 @@ end
 
 function MiniMapWidgetMz:SaveConfigValueMapPos(x, y)
   local scrn_w, scrn_h = TheSim:GetScreenSize()
-  local hudscale = self.owner.HUD.controls.top_root:GetScale()
+  local hudscale = self.playerfn().HUD.controls.top_root:GetScale()
   local new_horiz_margin = (scrn_w/hudscale.x/2 - x) - self.mapsize.w/2
   local new_vert_margin = -(y + self.mapsize.h/2)
   self.modconfig.margin_size_x = new_horiz_margin

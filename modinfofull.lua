@@ -1,7 +1,7 @@
 name = "Minimap HUD MZ"
 description = "Adds a minimap to the HUD with More customiZable"
 author = "pigshaam" -- Original: "squeek"
-version = "1.1.3"
+version = "1.1.4"
 forumthread = "" -- Original: "/files/file/352-minimap-hud/"
 icon_atlas = "modicon.xml"
 icon = "modicon.tex"
@@ -516,7 +516,8 @@ configuration_options =
         {
             {description = "Disable", data = "0"},
         },
-        default = "1+1+103+0+0+0",
+        --default = "1+1+103+0+0+0",
+        default = "1+1+0+0+0+0",
     },
     {
         name = "CenterResetKey",
@@ -532,7 +533,8 @@ configuration_options =
         {
             {description = "Disable", data = "0"},
         },
-        default = "1+2+401+99+0+0",
+        --default = "1+2+401+99+0+0",
+        default = "1+1+0+0+0+0",
     },
     {
         name = "! FACTORY RESET !",

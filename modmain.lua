@@ -26,22 +26,28 @@ end
 -- Do the stuff
 ----------------------------------------
 
-local function AddMiniMapMz_main( inst )
+local function AddMiniMapMz_main(inst)
 
   -- for some reason, without this the game would crash without an error when calling controls.top_root:AddChild
   -- too lazy to track down the cause, so just using this workaround
-  inst:DoTaskInTime( 0, function(inst) 
+  inst:DoTaskInTime( 0, function(inst)
+    --print("GetPlayer()",GetPlayer())
+    --print("inst",inst)
+
+    if GetPlayer() ~= inst then return end
+
+    local player = inst
 
     -- add the minimap widget and set its position
     local MiniMapWidgetMz = require "widgets/minimapwidgetmz"
     local ModConfig = require "screens/modconfig"
 
-    local controls = inst.HUD.controls
+    local controls = player.HUD.controls
 
     local modconfig = ModConfig(IsDST)
     modconfig:Init()
 
-    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( IsDST, inst, GetPlayer, GetWorld, modconfig ) )
+    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( IsDST, player, GetPlayer, GetWorld, modconfig ) )
     modconfig.minimapwidgetmz = controls.minimapwidgetmz
 
     local screensize = {TheSim:GetScreenSize()}
@@ -282,7 +288,8 @@ AddPlayerPostInit( AddMiniMapMz_main )
 
 -- special case: ToggleMap gets bypassed when the map gets hidden while on the map screen
 local function AddMiniMapMz_MapScreen( inst )
-  local MapScreen = require "screens/mapscreen"
+  --local MapScreen = require "screens/mapscreen"
+  local MapScreen = inst
   local mapscreen_oncontrol_base = MapScreen.OnControl
   MapScreen.OnControl = function(self, control, down)
     ret = mapscreen_oncontrol_base(self, control, down)

@@ -33,6 +33,13 @@ local ModConfig = Class(Screen, function(self, IsDST)
   self.minimapwidgetmz = nil
   self.modmain_updatestate_callback = nil
   self.quicksaving = false
+  if self.IsDST then
+    self.CONTROL_PAGELEFT = CONTROL_SCROLLBACK
+    self.CONTROL_PAGERIGHT = CONTROL_FOCUS_RIGHT
+  else
+    self.CONTROL_PAGELEFT = CONTROL_PAGELEFT
+    self.CONTROL_PAGERIGHT = CONTROL_PAGERIGHT
+  end
 end)
 
 function ModConfig:UpdateOptions()
@@ -299,7 +306,7 @@ function ModConfig:OnControlMapped(deviceId, controlId, inputId, hasChanged)
     if hasChanged then
       for k,v in pairs(self.optionwidgets) do
         if v.root.button and v.root.button.option_idx == self.mapping_idx then
-          local device, numInputs, input1, input2, input3, input4, intParam = TheInputProxy:GetLocalizedControl(deviceId, controlId, false)
+          local device, numInputs, input1, input2, input3, input4, intParam = TheInputProxy:GetLocalizedControl(deviceId, controlId, false, true)
           local new_text_value, new_value = self:JoinFromInputs(device, numInputs, {[1]=input1, [2]=input2, [3]=input3, [4]=input4})
           v.root.button:SetText(new_text_value)
           if options[self.mapping_idx].default ~= new_value then
@@ -801,12 +808,12 @@ function ModConfig:OnControl(control, down)
       self:Cancel()
     elseif control == CONTROL_ACCEPT and TheInput:ControllerAttached() and not TheFrontEnd.tracking_mouse then
       self:Apply() --apply changes and go back, or stay
-    elseif control == CONTROL_PAGELEFT then
+    elseif control == self.CONTROL_PAGELEFT then
       if self.leftbutton.shown then
         TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_move")
         self:Scroll(-ROWS_PER_COL)
       end
-    elseif control == CONTROL_PAGERIGHT then
+    elseif control == self.CONTROL_PAGERIGHT then
       if self.rightbutton.shown then
         TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_move")
         self:Scroll(ROWS_PER_COL)
@@ -1057,11 +1064,11 @@ function ModConfig:GetHelpText()
   table.insert(t, TheInput:GetLocalizedControl(controller_id, CONTROL_CANCEL) .. " " .. STRINGS.UI.HELP.BACK)
 
   if self.leftbutton.shown then 
-    table.insert(t,  TheInput:GetLocalizedControl(controller_id, CONTROL_PAGELEFT) .. " " .. STRINGS.UI.HELP.SCROLLBACK)
+    table.insert(t,  TheInput:GetLocalizedControl(controller_id, self.CONTROL_PAGELEFT) .. " " .. STRINGS.UI.HELP.SCROLLBACK)
   end
 
   if self.rightbutton.shown then
-    table.insert(t,  TheInput:GetLocalizedControl(controller_id, CONTROL_PAGERIGHT) .. " " .. STRINGS.UI.HELP.SCROLLFWD)
+    table.insert(t,  TheInput:GetLocalizedControl(controller_id, self.CONTROL_PAGERIGHT) .. " " .. STRINGS.UI.HELP.SCROLLFWD)
   end
 
   return table.concat(t, "  ")

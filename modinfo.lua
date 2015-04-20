@@ -1,7 +1,7 @@
 name = "Minimap HUD MZ"
 description = "Adds a minimap to the HUD with More customiZable and more controlable configuration options in game mode are added. "
 author = "pigshaam" -- Original: "squeek"
-version = "1.1.5"
+version = "1.1.6"
 forumthread = "" -- Original: "/files/file/352-minimap-hud/"
 icon_atlas = "modicon.xml"
 icon = "modicon.tex"

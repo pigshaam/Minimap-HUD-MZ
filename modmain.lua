@@ -2,7 +2,7 @@ local require = GLOBAL.require
 require "mods"
 local IsDST = GLOBAL.MOD_API_VERSION == 10
 
-local function GetPlayer()
+local function GetThePlayer()
   local player
   if IsDST then
     player = GLOBAL.ThePlayer
@@ -12,7 +12,7 @@ local function GetPlayer()
   return player
 end
 
-local function GetWorld()
+local function GetTheWorld()
   local world
   if IsDST then
     world = GLOBAL.TheWorld
@@ -31,10 +31,10 @@ local function AddMiniMapMz_main(inst)
   -- for some reason, without this the game would crash without an error when calling controls.top_root:AddChild
   -- too lazy to track down the cause, so just using this workaround
   inst:DoTaskInTime( 0, function(inst)
-    --print("GetPlayer()",GetPlayer())
+    --print("GetThePlayer()",GetThePlayer())
     --print("inst",inst)
 
-    if GetPlayer() ~= inst then return end
+    if GetThePlayer() ~= inst then return end
 
     local player = inst
 
@@ -47,7 +47,7 @@ local function AddMiniMapMz_main(inst)
     local modconfig = ModConfig(IsDST)
     modconfig:Init()
 
-    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( IsDST, player, GetPlayer, GetWorld, modconfig ) )
+    controls.minimapwidgetmz = controls.top_root:AddChild( MiniMapWidgetMz( IsDST, player, GetThePlayer, GetTheWorld, modconfig ) )
     modconfig.minimapwidgetmz = controls.minimapwidgetmz
 
     local screensize = {TheSim:GetScreenSize()}
@@ -109,25 +109,6 @@ local function AddMiniMapMz_main(inst)
 
 --      return ret
 --    end
-
-    -- keep track of zooming while on the map screen
-    local MapWidget = require "widgets/mapwidget"
-
-    MapWidget_OnZoomIn_base = MapWidget.OnZoomIn
-    MapWidget.OnZoomIn = function(self)
-      MapWidget_OnZoomIn_base( self )
-      if self.shown then
-        controls.minimapwidgetmz.mapscreenzoom = math.max(0,controls.minimapwidgetmz.mapscreenzoom-1)
-      end
-    end
-
-    MapWidget_OnZoomOut_base = MapWidget.OnZoomOut
-    MapWidget.OnZoomOut = function(self)
-      MapWidget_OnZoomOut_base( self )
-      if self.shown then
-        controls.minimapwidgetmz.mapscreenzoom = controls.minimapwidgetmz.mapscreenzoom+1
-      end
-    end
 
     local key_handlers = {}
 
@@ -294,7 +275,7 @@ local function AddMiniMapMz_MapScreen( inst )
   MapScreen.OnControl = function(self, control, down)
     ret = mapscreen_oncontrol_base(self, control, down)
     if ret and not down and (control == GLOBAL.CONTROL_MAP or control == GLOBAL.CONTROL_CANCEL) then
-      local controls = GetPlayer().HUD.controls
+      local controls = GetThePlayer().HUD.controls
       if controls.minimapwidgetmz then
         controls.minimapwidgetmz:Show()
       end
@@ -304,3 +285,29 @@ local function AddMiniMapMz_MapScreen( inst )
 end
 
 AddClassPostConstruct("screens/mapscreen", AddMiniMapMz_MapScreen)
+
+function AddMiniMapMz_mapwidget(inst)
+    -- keep track of zooming while on the map screen
+    --local MapWidget = require "widgets/mapwidget"
+
+  MapWidget_OnZoomIn_base = inst.OnZoomIn
+    inst.OnZoomIn = function(self)
+      MapWidget_OnZoomIn_base( self )
+      if self.shown then
+        local controls = GetThePlayer().HUD.controls
+        controls.minimapwidgetmz.mapscreenzoom = math.max(0,controls.minimapwidgetmz.mapscreenzoom-1)
+      end
+    end
+
+    MapWidget_OnZoomOut_base = inst.OnZoomOut
+    inst.OnZoomOut = function(self)
+      MapWidget_OnZoomOut_base( self )
+      if self.shown then
+        local controls = GetThePlayer().HUD.controls
+        controls.minimapwidgetmz.mapscreenzoom = controls.minimapwidgetmz.mapscreenzoom+1
+      end
+    end
+end
+
+AddClassPostConstruct("widgets/mapwidget", AddMiniMapMz_mapwidget)
+

@@ -1,7 +1,7 @@
 name = "Minimap HUD MZ"
 description = "Adds a minimap to the HUD with More customiZable and more controlable configuration options in game mode are added. "
 author = "pigshaam" -- Original: "squeek"
-version = "1.1.6"
+version = "1.1.7"
 forumthread = "" -- Original: "/files/file/352-minimap-hud/"
 icon_atlas = "modicon.xml"
 icon = "modicon.tex"
@@ -9,12 +9,14 @@ icon = "modicon.tex"
 -- this setting is dumb; this mod is likely compatible with all future versions
 api_version = 6
 
-client_only_mod = true
+-- compatiblity
 dst_compatible = true
 dont_starve_compatible = true
 reign_of_giants_compatible = true
-all_clients_require_mod = false
 shipwrecked_compatible = true
+
+client_only_mod = true
+all_clients_require_mod = false
 
 configuration_options =
 {
